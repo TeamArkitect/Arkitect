@@ -1,0 +1,6 @@
+{
+  "name": "DiscordLinker",
+  "authors": ["devlaq"],
+  "version": "v1.0",
+  "mainClass": "com.github.devlaq.arkitect.test_module.TestModule"
+}

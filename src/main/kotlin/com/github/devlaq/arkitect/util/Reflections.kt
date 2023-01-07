@@ -9,6 +9,6 @@ fun getServerControl(): ServerControl? {
             return it
         }
     }
-    getArkitectLogger().warn("Could not find ServerControl instance! (This may be critical to the plugin)")
+    getArkitectLogger().warn("Could not find ServerControl instance! (Is the plugin loaded in non-headless server?)")
     return null
 }

@@ -2,13 +2,35 @@ package com.github.devlaq.arkitect.i18n
 
 import com.github.devlaq.arkitect.util.Logger
 import java.io.Reader
+import java.text.MessageFormat
 import java.util.*
+
+//TODO Clean codes
 
 object I18N {
 
+    val manager = BundleManager("Arkitect")
+
+    fun availableLocales() = manager.availableLocales()
+
+    fun addBundle(bundle: I18NBundle) = manager.addBundle(bundle)
+    fun getBundle(locale: Locale) = manager.getBundle(locale)
+    fun getDefaultBundle() = manager.getDefaultBundle()
+
+    fun loadBundle(locale: Locale, path: String) = manager.loadBundle(locale, path)
+    fun loadBundles(locales: List<Locale>) = manager.loadBundles(locales)
+    fun loadBundles(vararg locales: Locale) = manager.loadBundles(locales.toList())
+
+    fun format(string: String, vararg args: String) = manager.format(string, *args)
+    fun translate(locale: Locale, key: String, vararg args: Any?) = manager.translate(locale, key, *args)
+    fun translate(key: String, vararg args: Any?) = manager.translate(key, *args)
+
+}
+
+class BundleManager(name: String) {
     private val bundles = mutableMapOf<Locale, I18NBundle>()
 
-    val logger = Logger("Arkitect/I18N")
+    val logger = Logger("$name/I18N")
 
     fun availableLocales(): List<Locale> {
         return bundles.keys.toList()
@@ -30,35 +52,30 @@ object I18N {
         addBundle(I18NBundleLoader.loadClasspath(path, locale))
     }
 
-    fun loadBundles() {
-        val bundles = mapOf(
-            Locale.KOREA to "/translations/bundle_ko_KR.properties",
-            Locale.US to "/translations/bundle_en_US.properties",
-        )
-        bundles.forEach { loadBundle(it.key, it.value) }
+    fun loadBundles(locales: List<Locale>) {
+        locales.forEach {
+            loadBundle(it, "/translations/bundle_${it.toLanguageTag()}.properties")
+        }
     }
+
+    fun loadBundles(vararg locales: Locale) = loadBundles(locales.toList())
 
     fun format(string: String, vararg args: String): String {
         return try {
-            String.format(string, *args)
+            MessageFormat.format(string, *args)
         } catch (e: Exception) {
             "${string}\n(Failed to format translation)"
         }
     }
 
-    fun formatRaw(string: String, vararg args: String): String {
-        return String.format(string, *args)
-    }
-
     fun translate(locale: Locale, key: String, vararg args: Any?): String {
         val bundle = bundles[locale] ?: getDefaultBundle()
-        return format(bundle.get(key) ?: "???${key}???", *args.map { it.toString() }.toTypedArray())
+        return bundle.translate(key, *args)
     }
 
     fun translate(key: String, vararg args: Any?): String {
         return translate(Locale.getDefault(), key, *args)
     }
-
 }
 
 class I18NBundle(
@@ -79,6 +96,10 @@ class I18NBundle(
 
     fun get(key: String): String? {
         return properties[key] ?: parent?.get(key)
+    }
+
+    fun translate(key: String, vararg args: Any?): String {
+        return I18N.format(get(key) ?: "???${key}???", *args.map { it.toString() }.toTypedArray())
     }
 
 }
