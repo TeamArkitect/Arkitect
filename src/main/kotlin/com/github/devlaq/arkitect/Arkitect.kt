@@ -37,7 +37,6 @@ class Arkitect: Plugin() {
         val timeToInitialize = measureTime {
             registerCommands()
 
-
             Modules.loadDirectory(DataFile("modules", mkdirs = true))
         }
 
