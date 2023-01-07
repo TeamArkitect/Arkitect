@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.7.20"
     kotlin("plugin.serialization") version "1.7.20"
+    `maven-publish`
 }
 
 group = "com.github.devlaq"
@@ -18,6 +19,18 @@ tasks.test {
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "16"
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "com.github.devlaq.arkitect"
+            artifactId = "Arkitect"
+            version = "dev0.1"
+
+            from(components["java"])
+        }
+    }
 }
 
 allprojects {
