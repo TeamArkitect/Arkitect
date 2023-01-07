@@ -6,7 +6,6 @@ import com.github.devlaq.arkitect.util.Logger
 import com.github.devlaq.arkitect.util.getServerControl
 import com.github.devlaq.arkitect.util.sendTranslated
 import mindustry.Vars
-import mindustry.core.NetServer
 import mindustry.gen.Player
 
 class CommandContext(val player: Player?, val args: Array<out String>) {

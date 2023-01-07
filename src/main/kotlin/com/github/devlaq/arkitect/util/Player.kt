@@ -5,5 +5,4 @@ import mindustry.gen.Player
 
 fun Player.sendTranslated(key: String, vararg args: Any?) {
     sendMessage(I18N.translate(key, args))
-
 }
