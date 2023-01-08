@@ -61,8 +61,9 @@ val fatJar = task("fatJar", type = Jar::class) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-if(properties["local"] == true) {
+if(System.getenv("JITPACK") != "true") {
     task("testFatJar") {
+        println("HELLOWORLD")
         if(!fatJar.archiveFile.get().asFile.exists()) return@task
         val buildDir = layout.buildDirectory
         val builtFatJar = buildDir.dir("libs").get().file(fatJar.archiveFileName.get()).asFile
@@ -92,7 +93,6 @@ if(properties["local"] == true) {
                         .command("kill", "-9", processesToKill)
                         .start()
                     process.waitFor()
-                    println(process.inputReader().readText())
                 }
                 killAliveTestServers()
                 val process = ProcessBuilder()
