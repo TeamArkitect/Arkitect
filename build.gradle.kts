@@ -60,56 +60,59 @@ val fatJar = task("fatJar", type = Jar::class) {
     with(tasks.jar.get() as CopySpec)
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
-/* Temporary disabled the task due to jitpack error
-task("testFatJar") {
-    if(properties["local"] == false) return@task
-    if(!fatJar.archiveFile.get().asFile.exists()) return@task
-    val buildDir = layout.buildDirectory
-    val builtFatJar = buildDir.dir("libs").get().file(fatJar.archiveFileName.get()).asFile
-    val destFile = File("${testServerDirectory}/config/mods/Arkitect-TEST.jar")
-    if(testServerDirectory != null) {
-        doLast {
-            builtFatJar.copyTo(destFile, overwrite = true)
 
-            fun getJvmProcesses(): MutableMap<Int, String> {
-                val jpsProcess = ProcessBuilder()
-                    .command("/usr/lib/jvm/jdk-17/bin/jps", "-l")
-                    .start()
-                jpsProcess.waitFor()
-                val output = jpsProcess.inputReader().readText()
-                val map = mutableMapOf<Int, String>()
-                output.lines().forEach {
-                    val split = it.split(" ", limit = 2)
-                    if(split.size > 1) map[split[0].toInt()] = split[1]
+if(properties["local"] == true) {
+    task("testFatJar") {
+        if(!fatJar.archiveFile.get().asFile.exists()) return@task
+        val buildDir = layout.buildDirectory
+        val builtFatJar = buildDir.dir("libs").get().file(fatJar.archiveFileName.get()).asFile
+        val destFile = File("${testServerDirectory}/config/mods/Arkitect-TEST.jar")
+        if(testServerDirectory != null) {
+            doLast {
+                builtFatJar.copyTo(destFile, overwrite = true)
+
+                fun getJvmProcesses(): MutableMap<Int, String> {
+                    val jpsProcess = ProcessBuilder()
+                        .command("/usr/lib/jvm/jdk-17/bin/jps", "-l")
+                        .start()
+                    jpsProcess.waitFor()
+                    val output = jpsProcess.inputReader().readText()
+                    val map = mutableMapOf<Int, String>()
+                    output.lines().forEach {
+                        val split = it.split(" ", limit = 2)
+                        if(split.size > 1) map[split[0].toInt()] = split[1]
+                    }
+                    return map
                 }
-                return map
-            }
-            fun killAliveTestServers() {
-                val jvmProcesses = getJvmProcesses().filterValues { it.startsWith(testServerDirectory!!) }
-                val processesToKill = jvmProcesses.keys.joinToString(" ") { it.toString() }
-                println("Killed alive test servers [${jvmProcesses.keys.joinToString(",")}]")
+                fun killAliveTestServers() {
+                    val jvmProcesses = getJvmProcesses().filterValues { it.startsWith(testServerDirectory!!) }
+                    val processesToKill = jvmProcesses.keys.joinToString(" ") { it.toString() }
+                    println("Killed alive test servers [${jvmProcesses.keys.joinToString(",")}]")
+                    val process = ProcessBuilder()
+                        .command("kill", "-9", processesToKill)
+                        .start()
+                    process.waitFor()
+                    println(process.inputReader().readText())
+                }
+                killAliveTestServers()
                 val process = ProcessBuilder()
-                    .command("kill", "-9", processesToKill)
+                    .command("gnome-terminal", "--title", "Mindustry v$mindustryVersion Headless [Arkitect Testing Server]", "--wait", "--", "sh", "${testServerDirectory}/start.sh")
+                    .directory(File(testServerDirectory!!))
                     .start()
                 process.waitFor()
-                println(process.inputReader().readText())
             }
-            killAliveTestServers()
-            val process = ProcessBuilder()
-                .command("gnome-terminal", "--title", "Mindustry v$mindustryVersion Headless [Arkitect Testing Server]", "--wait", "--", "sh", "${testServerDirectory}/start.sh")
-                .directory(File(testServerDirectory!!))
-                .start()
-            process.waitFor()
         }
     }
-}*/
+
+    tasks {
+        "testFatJar" {
+            dependsOn(fatJar)
+        }
+    }
+}
 
 tasks {
     "build" {
         dependsOn(fatJar)
     }
-    /*
-    "testFatJar" {
-        dependsOn(build)
-    }*/
 }
