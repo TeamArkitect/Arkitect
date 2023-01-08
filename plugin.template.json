@@ -3,5 +3,5 @@
   "author": "devlaq",
   "main": "com.github.devlaq.arkitect.Arkitect",
   "description": "Server utility/management",
-  "version": "dev0.1"
+  "version": "${version}"
 }
