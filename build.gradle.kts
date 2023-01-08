@@ -62,6 +62,7 @@ val fatJar = task("fatJar", type = Jar::class) {
 }
 
 task("testFatJar") {
+    if(properties["local"] == false) return@task
     if(!fatJar.archiveFile.get().asFile.exists()) return@task
     val buildDir = layout.buildDirectory
     val builtFatJar = buildDir.dir("libs").get().file(fatJar.archiveFileName.get()).asFile
@@ -100,7 +101,6 @@ task("testFatJar") {
                 .start()
             process.waitFor()
         }
-
     }
 }
 
