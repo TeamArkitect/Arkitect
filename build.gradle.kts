@@ -60,7 +60,7 @@ val fatJar = task("fatJar", type = Jar::class) {
     with(tasks.jar.get() as CopySpec)
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
-
+/* Temporary disabled the task due to jitpack error
 task("testFatJar") {
     if(properties["local"] == false) return@task
     if(!fatJar.archiveFile.get().asFile.exists()) return@task
@@ -102,13 +102,14 @@ task("testFatJar") {
             process.waitFor()
         }
     }
-}
+}*/
 
 tasks {
     "build" {
         dependsOn(fatJar)
     }
+    /*
     "testFatJar" {
         dependsOn(build)
-    }
+    }*/
 }
