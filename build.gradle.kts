@@ -63,7 +63,7 @@ val fatJar = task("fatJar", type = Jar::class) {
 
 if(System.getenv("JITPACK") != "true") {
     task("testFatJar") {
-        println("HELLOWORLD")
+        dependsOn(fatJar)
         if(!fatJar.archiveFile.get().asFile.exists()) return@task
         val buildDir = layout.buildDirectory
         val builtFatJar = buildDir.dir("libs").get().file(fatJar.archiveFileName.get()).asFile
@@ -101,12 +101,6 @@ if(System.getenv("JITPACK") != "true") {
                     .start()
                 process.waitFor()
             }
-        }
-    }
-
-    tasks {
-        "testFatJar" {
-            dependsOn(fatJar)
         }
     }
 }
