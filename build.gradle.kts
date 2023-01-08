@@ -10,8 +10,30 @@ group = "com.github.devlaq"
 version = "1.0-SNAPSHOT"
 
 val mindustryVersion: String by project
-
 val testServerDirectory: String? by project
+
+val pluginVersion: String? by project
+
+/**
+ * Generate plugin.json
+ */
+fun generatePluginMeta() {
+    val template = File("./plugin.template.json")
+    val dest = File("./src/main/resources/plugin.json")
+
+    val placeholders = mapOf<String, Any?>(
+        "version" to pluginVersion
+    )
+
+    var replaced = template.readText()
+    placeholders.forEach { (t, u) ->
+        replaced = replaced.replace("\${${t}}", u.toString())
+    }
+
+    if(!dest.exists()) dest.createNewFile()
+    dest.writeText(replaced)
+}
+generatePluginMeta()
 
 tasks.test {
     useJUnitPlatform()
@@ -26,7 +48,7 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = "com.github.devlaq.arkitect"
             artifactId = "Arkitect"
-            version = "dev0.1"
+            version = pluginVersion
 
             from(components["java"])
         }
@@ -59,6 +81,10 @@ val fatJar = task("fatJar", type = Jar::class) {
     from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
     with(tasks.jar.get() as CopySpec)
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+task("generateSources") {
+    generatePluginMeta()
 }
 
 if(System.getenv("JITPACK") != "true") {
