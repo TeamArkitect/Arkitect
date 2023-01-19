@@ -202,17 +202,16 @@ object Modules: Disposable {
             return null
         }
 
-        if(!noLog) logger.info("<%module.load%> ... ", file.name)
+        if(!noLog) logger.infoln("<%module.load%> ... ", file.name)
         return try {
             val loadedMeta = moduleLoader.load(file)
             loadedMeta.enable()
-            if(!noLog) logger.print("<%success%>")
-            logger.println()
             loaded.add(loadedMeta)
             loadedMeta
         } catch (e: Throwable) {
-            if(!noLog) logger.print("<%fail%>")
-            if(Arkitect.settings!!.modules.logFailCause) logger.print("[red](${e.localizedMessage})[]")
+            if(!noLog) logger.print("<%module.load%> ... <%fail%>", file.name)
+            if(Arkitect.settings!!.modules.fail == "message") logger.print("<red>(${e.localizedMessage})</>")
+            if(Arkitect.settings!!.modules.fail == "stacktrace") logger.print("<red>(${e.stackTraceToString()})</>")
             logger.println()
             null
         }

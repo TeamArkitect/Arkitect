@@ -29,13 +29,13 @@ class BundleManager {
         return bundles[Locale.ENGLISH]!!
     }
 
-    fun loadBundle(locale: Locale, path: String) {
-        addBundle(I18NBundleLoader.loadClasspath(path, locale))
+    fun loadBundle(locale: Locale, path: String, clazz: Class<Any> = javaClass) {
+        addBundle(I18NBundleLoader.loadClasspath(path, locale, null, clazz))
     }
 
-    fun loadBundles(locales: List<Locale>) {
+    fun loadBundles(locales: List<Locale>, clazz: Class<Any> = javaClass) {
         locales.forEach {
-            loadBundle(it, "/translations/bundle_${it.toLanguageTag()}.properties")
+            loadBundle(it, "/translations/bundle_${it.toLanguageTag()}.properties", clazz)
         }
     }
 
@@ -104,8 +104,8 @@ object I18NBundleLoader {
         )
     }
 
-    fun loadClasspath(path: String, locale: Locale, parent: I18NBundle? = null): I18NBundle {
-        val reader = javaClass.getResourceAsStream(path)?.reader()
+    fun loadClasspath(path: String, locale: Locale, parent: I18NBundle? = null, clazz: Class<Any> = javaClass): I18NBundle {
+        val reader = clazz.getResourceAsStream(path)?.reader()
         if(reader == null) {
             logger.errorln("Bundle file $path not found in classpath!")
             return I18NBundle.createEmptyBundle()

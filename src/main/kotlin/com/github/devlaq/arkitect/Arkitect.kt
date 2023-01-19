@@ -39,7 +39,7 @@ class Arkitect: Plugin() {
         )
 
         bundleManager.localeProvider = {
-            Locale.forLanguageTag(Arkitect.settings?.locale ?: Locale.getDefault().toLanguageTag())
+            Locale.forLanguageTag(settings?.locale ?: Locale.getDefault().toLanguageTag())
         }
 
         Logging.init()

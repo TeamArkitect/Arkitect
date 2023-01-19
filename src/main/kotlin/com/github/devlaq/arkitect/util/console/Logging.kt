@@ -84,8 +84,8 @@ class Logger(var tag: String, val bundleManager: BundleManager? = null) {
     }
 
     fun print(message: String, vararg args: Any) {
-        if(bundleManager == null) print(Logging.useStyle(message))
-        else kotlin.io.print(Logging.format(bundleManager, message, *args))
+        if(bundleManager == null) kotlin.io.print(Logging.useStyle(message))
+        else kotlin.io.print(Logging.format(bundleManager, message, *args, indent = generatePrefix(Logging.Level.Info).length))
     }
 
     fun println(message: String, vararg args: Any) {

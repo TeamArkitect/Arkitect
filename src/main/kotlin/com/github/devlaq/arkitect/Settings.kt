@@ -5,7 +5,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
-import java.util.Locale
+import java.util.*
 
 private val json = Json {
     encodeDefaults = true
@@ -41,5 +41,5 @@ data class ArkitectSettings(
 @Serializable
 data class ArkitectModuleSettings(
     val watchModules: Boolean = false,
-    val logFailCause: Boolean = false
+    val fail: String = "message"
 )
