@@ -197,16 +197,20 @@ object Modules: Disposable {
 
     fun load(file: File, noLog: Boolean = false): LoadedModuleMeta? {
         if(!file.isFile) return null
-        if(loaded.map { it.file.name }.contains(file.name)) return null
+        if(loaded.map { it.file.name }.contains(file.name)) {
+            logger.infoln("<%module.already_loaded%>", file.name)
+            return null
+        }
 
         if(!noLog) logger.info("<%module.load%> ... ", file.name)
         return try {
             val loadedMeta = moduleLoader.load(file)
-            loaded.add(loadedMeta)
+            loadedMeta.enable()
             if(!noLog) logger.print("<%success%>")
             logger.println()
+            loaded.add(loadedMeta)
             loadedMeta
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             if(!noLog) logger.print("<%fail%>")
             if(Arkitect.settings!!.modules.logFailCause) logger.print("[red](${e.localizedMessage})[]")
             logger.println()
@@ -218,17 +222,27 @@ object Modules: Disposable {
         if(!file.isFile) return
 
         try {
-            if(!noLog) logger.infoln("module.unload")
+            if(!noLog) logger.infoln("<%module.unload%>")
             val module = loaded.firstOrNull { it.file.canonicalPath == file.canonicalPath } ?: return
-            module.instance.disable()
+            module.disable()
             loaded.remove(module)
         } catch (_: Exception) {}
     }
 
     fun reload(file: File, noLog: Boolean = false) {
-        if(!noLog) logger.infoln("module.reload")
+        if(!noLog) logger.infoln("<%module.reload%>")
         unload(file, noLog = noLog)
         load(file, noLog = noLog)
+    }
+
+    fun readMetas(): Map<File, ModuleMeta> {
+        val metas = mutableMapOf<File, ModuleMeta>()
+        modulesDir.listFiles()?.filter { it.isFile }?.forEach {
+            try {
+                moduleLoader.readMeta(it)?.let { meta -> metas.put(it, meta) }
+            } catch (_: Throwable) {}
+        }
+        return metas.toMap()
     }
 
     override fun dispose() {
