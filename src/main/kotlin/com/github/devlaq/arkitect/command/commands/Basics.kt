@@ -1,12 +1,8 @@
 package com.github.devlaq.arkitect.command.commands
 
 import com.github.devlaq.arkitect.Arkitect
-import com.github.devlaq.arkitect.ArkitectSettings
 import com.github.devlaq.arkitect.command.buildCommand
-import com.github.devlaq.arkitect.core.module.Modules
-import com.github.devlaq.arkitect.i18n.I18N
 import mindustry.Vars
-import java.util.Locale
 
 fun registerBasicCommands() {
     buildArkitectCommand()
@@ -29,7 +25,10 @@ private fun buildArkitectCommand() {
                 when(args[0]) {
                     "locale" -> {
                         if (args.size <= 1) {
-                            sendHelp()
+                            send("<%command.arkitect.locale.available%>")
+                            Arkitect.bundleManager.availableLocales().forEach {
+                                send("<%command.arkitect.locale.available_element%>", it.getDisplayName(it), it.toLanguageTag())
+                            }
                             return@action
                         }
 
@@ -40,7 +39,7 @@ private fun buildArkitectCommand() {
                             return@action
                         }
 
-                        if(Arkitect.localeProvider() == locale) {
+                        if(Arkitect.bundleManager.localeProvider() == locale) {
                             send("<%command.arkitect.locale.not_changed%>", languageTag)
                             return@action
                         }

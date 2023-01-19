@@ -1,8 +1,6 @@
 package com.github.devlaq.arkitect.util.console
 
-import com.github.devlaq.arkitect.Arkitect
 import com.github.devlaq.arkitect.i18n.BundleManager
-import com.github.devlaq.arkitect.i18n.I18N
 import com.github.devlaq.arkitect.util.resources.getResourceAsText
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -67,7 +65,7 @@ object Logging {
 
 }
 
-class Logger(var tag: String, val bundleManager: BundleManager) {
+class Logger(var tag: String, val bundleManager: BundleManager? = null) {
 
     fun generatePrefix(level: Logging.Level): String {
         val dateTimeFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
@@ -77,7 +75,8 @@ class Logger(var tag: String, val bundleManager: BundleManager) {
 
     fun log(level: Logging.Level, message: String, vararg args: Any) {
         val prefix = generatePrefix(level)
-        print(Logging.format(bundleManager, "$prefix$message", *args, indent = Logging.removeStyle(prefix).length))
+        if(bundleManager == null) print(Logging.useStyle("$prefix$message"))
+        else print(Logging.format(bundleManager, "$prefix$message", *args, indent = Logging.removeStyle(prefix).length))
     }
 
     fun logln(level: Logging.Level, message: String, vararg args: Any) {
@@ -85,7 +84,8 @@ class Logger(var tag: String, val bundleManager: BundleManager) {
     }
 
     fun print(message: String, vararg args: Any) {
-        kotlin.io.print(Logging.format(bundleManager, message, *args))
+        if(bundleManager == null) print(Logging.useStyle(message))
+        else kotlin.io.print(Logging.format(bundleManager, message, *args))
     }
 
     fun println(message: String, vararg args: Any) {

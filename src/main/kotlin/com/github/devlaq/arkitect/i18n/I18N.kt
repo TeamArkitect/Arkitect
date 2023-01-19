@@ -1,48 +1,17 @@
 package com.github.devlaq.arkitect.i18n
 
-import com.github.devlaq.arkitect.Arkitect
-import com.github.devlaq.arkitect.ArkitectSettings
-import com.github.devlaq.arkitect.util.Logger
+import com.github.devlaq.arkitect.util.console.Logger
 import java.io.Reader
 import java.text.MessageFormat
 import java.util.*
 
-//TODO Clean codes
-
-object I18N {
-
-    val manager = BundleManager("Arkitect")
-
-    init {
-        manager.localeProvider = {
-            Locale.forLanguageTag(Arkitect.settings?.locale ?: Locale.getDefault().toLanguageTag())
-        }
-    }
-
-    fun availableLocales() = manager.availableLocales()
-
-    fun addBundle(bundle: I18NBundle) = manager.addBundle(bundle)
-    fun getBundle(locale: Locale) = manager.getBundle(locale)
-    fun getDefaultBundle() = manager.getDefaultBundle()
-
-    fun loadBundle(locale: Locale, path: String) = manager.loadBundle(locale, path)
-    fun loadBundles(locales: List<Locale>) = manager.loadBundles(locales)
-    fun loadBundles(vararg locales: Locale) = manager.loadBundles(locales.toList())
-
-    fun format(string: String, vararg args: Any) = manager.format(string, *args)
-    fun translate(locale: Locale, key: String, vararg args: Any?) = manager.translate(locale, key, *args)
-    fun translate(key: String, vararg args: Any?) = manager.translate(key, *args)
-}
-
-class BundleManager(name: String) {
+class BundleManager {
 
     private val bundles = mutableMapOf<Locale, I18NBundle>()
 
     var localeProvider = {
         Locale.getDefault()
     }
-
-    val logger = Logger("$name/I18N")
 
     fun availableLocales(): List<Locale> {
         return bundles.keys.toList()
@@ -111,7 +80,7 @@ class I18NBundle(
     }
 
     fun translate(key: String, vararg args: Any?): String {
-        return I18N.format(get(key) ?: "???${key}???", *args.map { it.toString() }.toTypedArray())
+        return MessageFormat.format(get(key) ?: "???${key}???", *args.map { it.toString() }.toTypedArray())
     }
 
 }
@@ -138,7 +107,7 @@ object I18NBundleLoader {
     fun loadClasspath(path: String, locale: Locale, parent: I18NBundle? = null): I18NBundle {
         val reader = javaClass.getResourceAsStream(path)?.reader()
         if(reader == null) {
-            logger.error("Bundle file $path not found in classpath!")
+            logger.errorln("Bundle file $path not found in classpath!")
             return I18NBundle.createEmptyBundle()
         }
         return load(reader, locale, parent)

@@ -5,19 +5,10 @@ import arc.Core
 import com.github.devlaq.arkitect.command.registerCommands
 import com.github.devlaq.arkitect.core.module.Modules
 import com.github.devlaq.arkitect.i18n.BundleManager
-import com.github.devlaq.arkitect.i18n.I18N
 import com.github.devlaq.arkitect.util.DataFile
 import com.github.devlaq.arkitect.util.console.Logger
 import com.github.devlaq.arkitect.util.console.Logging
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import mindustry.Vars
-import mindustry.mod.Mods
-import mindustry.mod.Mods.ModMeta
 import mindustry.mod.Plugin
-import java.io.File
 import java.util.*
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -28,7 +19,7 @@ class Arkitect: Plugin() {
     private val logger = createLogger("Arkitect")
 
     companion object {
-        val bundleManager = BundleManager("Arkitect")
+        val bundleManager = BundleManager()
         var settings: ArkitectSettings? = null
 
         fun createLogger(tag: String) = Logger(tag, bundleManager)

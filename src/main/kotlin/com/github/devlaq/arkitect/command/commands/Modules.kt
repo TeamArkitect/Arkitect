@@ -39,43 +39,15 @@ private object ModuleCommand {
     }
 
     fun subcommandLoad(context: CommandContext) = context.run {
-        if(args.size < 2) {
-            sendTranslated("command.modules.require_arguments", 2)
-            return@run
-        }
 
-        val moduleName = args[1]
-        val moduleFileName = searchModule(moduleName) ?: return@run
-
-        sendTranslated("command.modules.load", moduleName)
     }
 
     fun subcommandUnload(context: CommandContext) = context.run {
-        if(args.size < 2) {
-            sendTranslated("command.modules.require_arguments", 2)
-            return@run
-        }
 
-        val moduleName = args[1]
-        val moduleFileName = searchModule(moduleName) ?: return@run
-
-        sendTranslated("command.modules.unload", moduleName)
     }
 
     fun subcommandReload(context: CommandContext) = context.run {
-        if(args.size < 2) {
-            sendTranslated("command.modules.require_arguments", 2)
-            return@run
-        }
 
-        val moduleName = args[1]
-        val moduleFileName = searchModule(moduleName) ?: return@run
-
-        sendTranslated("command.modules.load")
-    }
-
-    private fun CommandContext.searchModule(moduleName: String): String? {
-        return null
     }
 
 }

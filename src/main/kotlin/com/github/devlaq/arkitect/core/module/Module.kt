@@ -3,11 +3,12 @@ package com.github.devlaq.arkitect.core.module
 import arc.util.Disposable
 import com.github.devlaq.arkitect.Arkitect
 import com.github.devlaq.arkitect.util.DataFile
-import com.github.devlaq.arkitect.util.console.Logger
 import dev.vishna.watchservice.KWatchEvent.Kind.*
 import dev.vishna.watchservice.asWatchChannel
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -15,7 +16,6 @@ import java.io.File
 import java.net.URLClassLoader
 import java.util.zip.ZipException
 import java.util.zip.ZipFile
-import kotlin.math.log
 
 interface ArkitectModule {
 

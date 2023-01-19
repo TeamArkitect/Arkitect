@@ -1,7 +1,7 @@
 package com.github.devlaq.arkitect.util
 
 import arc.Core
-import mindustry.mod.Mods
+import com.github.devlaq.arkitect.util.console.Logger
 import mindustry.server.ServerControl
 
 fun getServerControl(): ServerControl? {

@@ -5,10 +5,8 @@ import com.github.devlaq.arkitect.Arkitect
 import com.github.devlaq.arkitect.command.commands.registerBasicCommands
 import com.github.devlaq.arkitect.command.commands.registerDebuggingCommands
 import com.github.devlaq.arkitect.command.commands.registerModuleCommands
-import com.github.devlaq.arkitect.util.console.Logger
 import com.github.devlaq.arkitect.util.console.Logging
 import com.github.devlaq.arkitect.util.getServerControl
-import com.github.devlaq.arkitect.util.sendTranslated
 import mindustry.Vars
 import mindustry.gen.Player
 
@@ -42,15 +40,6 @@ class CommandContext(val player: Player?, val args: Array<out String>) {
             logger.info(text)
         }
     }
-
-    fun sendTranslated(key: String, vararg args: Any?) {
-        if(player != null) {
-            player.sendTranslated(key, *args)
-        } else {
-            logger.infoln("<%${key}%>", *args.map { it.toString() }.toTypedArray())
-        }
-    }
-
 }
 
 class CommandBuilder {
