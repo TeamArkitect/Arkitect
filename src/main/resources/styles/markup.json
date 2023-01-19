@@ -1,0 +1,40 @@
+{
+  "eraseLine": "\u001b[2K\r",
+
+  "flush": "\u001b[H\u001b[2J",
+  "reset": "\u001b[0;0m",
+  "/": "\u001b[0;0m",
+
+  "bold": "\u001b[1m",
+  "italic": "\u001b[3m",
+  "underline": "\u001b[4m",
+  "reverse": "\u001b[7m",
+
+  "/bold": "\u001b[22m",
+  "/italic": "\u001b[23m",
+  "/underline": "\u001b[24m",
+  "/reverse": "\u001b[27m",
+
+  "black": "\u001b[30m",
+  "red": "\u001b[31m",
+  "green": "\u001b[32m",
+  "yellow": "\u001b[33m",
+  "blue": "\u001b[34m",
+  "purple": "\u001b[35m",
+  "cyan": "\u001b[36m",
+  "lightBlack": "\u001b[90m",
+  "lightRed": "\u001b[91m",
+  "lightGreen": "\u001b[92m",
+  "lightYellow": "\u001b[93m",
+  "lightBlue": "\u001b[94m",
+  "lightMagenta": "\u001b[95m",
+  "lightCyan": "\u001b[96m",
+  "lightWhite": "\u001b[97m",
+  "white": "\u001b[37m",
+
+  "backDefault": "\u001b[49m",
+  "backRed": "\u001b[41m",
+  "backGreen": "\u001b[42m",
+  "backYellow": "\u001b[43m",
+  "backBlue": "\u001b[44m"
+}

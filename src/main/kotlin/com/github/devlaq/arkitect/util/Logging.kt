@@ -4,11 +4,7 @@ import arc.util.Log
 import arc.util.Log.LogLevel
 import com.github.devlaq.arkitect.i18n.I18N
 
-fun getArkitectLogger(): Logger {
-    return Logger("Arkitect")
-}
-
-class Logger(val name: String) {
+class Logger(var name: String) {
 
     val colorMap = mapOf(
         "flush" to "\u001b[H\u001b[2J",
@@ -55,11 +51,11 @@ class Logger(val name: String) {
     }
 
     fun log(level: LogLevel, styles: String, msg: Any?) {
-        Log.log(level, "[$name] ${colorize(msg.toString().replace("[]", "[]${styles}"))}")
+        Log.log(level, "[$name] ${colorize(msg.toString().replace("\n", "\n                          ").replace("[]", "[]${styles}"))}")
     }
 
     fun log(level: LogLevel, msg: Any?) {
-        Log.log(level, "[$name] ${colorize(msg.toString())}")
+        log(level, styles = "", msg)
     }
 
     fun debug(msg: String) {
@@ -78,6 +74,10 @@ class Logger(val name: String) {
         log(LogLevel.err, styles = "[lightred][bold]", msg)
     }
 
+    fun print(msg: Any?) {
+        kotlin.io.print(colorize(msg.toString()))
+    }
+
     fun infoT(key: String, vararg args: Any?) {
         info(I18N.translate(key, *args))
     }
@@ -88,6 +88,10 @@ class Logger(val name: String) {
 
     fun errorT(key: String, vararg args: Any?) {
         error(I18N.translate(key, *args))
+    }
+
+    fun printT(key: String, vararg args: Any?) {
+        print(I18N.translate(key, *args))
     }
 
 }

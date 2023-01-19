@@ -1,5 +1,7 @@
 package com.github.devlaq.arkitect.i18n
 
+import com.github.devlaq.arkitect.Arkitect
+import com.github.devlaq.arkitect.ArkitectSettings
 import com.github.devlaq.arkitect.util.Logger
 import java.io.Reader
 import java.text.MessageFormat
@@ -11,6 +13,12 @@ object I18N {
 
     val manager = BundleManager("Arkitect")
 
+    init {
+        manager.localeProvider = {
+            Locale.forLanguageTag(Arkitect.settings?.locale ?: Locale.getDefault().toLanguageTag())
+        }
+    }
+
     fun availableLocales() = manager.availableLocales()
 
     fun addBundle(bundle: I18NBundle) = manager.addBundle(bundle)
@@ -21,14 +29,18 @@ object I18N {
     fun loadBundles(locales: List<Locale>) = manager.loadBundles(locales)
     fun loadBundles(vararg locales: Locale) = manager.loadBundles(locales.toList())
 
-    fun format(string: String, vararg args: String) = manager.format(string, *args)
+    fun format(string: String, vararg args: Any) = manager.format(string, *args)
     fun translate(locale: Locale, key: String, vararg args: Any?) = manager.translate(locale, key, *args)
     fun translate(key: String, vararg args: Any?) = manager.translate(key, *args)
-
 }
 
 class BundleManager(name: String) {
+
     private val bundles = mutableMapOf<Locale, I18NBundle>()
+
+    var localeProvider = {
+        Locale.getDefault()
+    }
 
     val logger = Logger("$name/I18N")
 
@@ -60,7 +72,7 @@ class BundleManager(name: String) {
 
     fun loadBundles(vararg locales: Locale) = loadBundles(locales.toList())
 
-    fun format(string: String, vararg args: String): String {
+    fun format(string: String, vararg args: Any): String {
         return try {
             MessageFormat.format(string, *args)
         } catch (e: Exception) {
@@ -74,7 +86,7 @@ class BundleManager(name: String) {
     }
 
     fun translate(key: String, vararg args: Any?): String {
-        return translate(Locale.getDefault(), key, *args)
+        return translate(localeProvider(), key, *args)
     }
 }
 
