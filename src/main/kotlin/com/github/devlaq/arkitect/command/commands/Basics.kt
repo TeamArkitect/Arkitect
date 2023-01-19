@@ -34,13 +34,13 @@ private fun buildArkitectCommand() {
                         }
 
                         val languageTag = args[1]
-                        val locale = I18N.availableLocales().find { it.toLanguageTag().equals(languageTag, ignoreCase = true) }
+                        val locale = Arkitect.bundleManager.availableLocales().find { it.toLanguageTag().equals(languageTag, ignoreCase = true) }
                         if(locale == null) {
                             send("<%not_found.locale%>", languageTag)
                             return@action
                         }
 
-                        if(Locale.getDefault() == locale) {
+                        if(Arkitect.localeProvider() == locale) {
                             send("<%command.arkitect.locale.not_changed%>", languageTag)
                             return@action
                         }
