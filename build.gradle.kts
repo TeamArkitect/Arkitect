@@ -74,6 +74,8 @@ dependencies {
     compileOnly("com.github.Anuken.Mindustry:server:$mindustryVersion")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation("com.github.vishna:watchservice-ktx:master-SNAPSHOT")
 }
 
 val fatJar = task("fatJar", type = Jar::class) {

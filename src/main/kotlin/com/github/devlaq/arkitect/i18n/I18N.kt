@@ -1,39 +1,24 @@
 package com.github.devlaq.arkitect.i18n
 
-import com.github.devlaq.arkitect.util.Logger
+import com.github.devlaq.arkitect.util.console.Logger
 import java.io.Reader
 import java.text.MessageFormat
 import java.util.*
 
-//TODO Clean codes
+class BundleManager {
 
-object I18N {
-
-    val manager = BundleManager("Arkitect")
-
-    fun availableLocales() = manager.availableLocales()
-
-    fun addBundle(bundle: I18NBundle) = manager.addBundle(bundle)
-    fun getBundle(locale: Locale) = manager.getBundle(locale)
-    fun getDefaultBundle() = manager.getDefaultBundle()
-
-    fun loadBundle(locale: Locale, path: String) = manager.loadBundle(locale, path)
-    fun loadBundles(locales: List<Locale>) = manager.loadBundles(locales)
-    fun loadBundles(vararg locales: Locale) = manager.loadBundles(locales.toList())
-
-    fun format(string: String, vararg args: String) = manager.format(string, *args)
-    fun translate(locale: Locale, key: String, vararg args: Any?) = manager.translate(locale, key, *args)
-    fun translate(key: String, vararg args: Any?) = manager.translate(key, *args)
-
-}
-
-class BundleManager(name: String) {
     private val bundles = mutableMapOf<Locale, I18NBundle>()
 
-    val logger = Logger("$name/I18N")
+    var localeProvider = {
+        Locale.getDefault()
+    }
 
     fun availableLocales(): List<Locale> {
         return bundles.keys.toList()
+    }
+
+    fun clear() {
+        bundles.clear()
     }
 
     fun addBundle(bundle: I18NBundle) {
@@ -48,23 +33,23 @@ class BundleManager(name: String) {
         return bundles[Locale.ENGLISH]!!
     }
 
-    fun loadBundle(locale: Locale, path: String) {
-        addBundle(I18NBundleLoader.loadClasspath(path, locale))
+    fun loadBundle(locale: Locale, path: String, clazz: Class<Any> = javaClass) {
+        addBundle(I18NBundleLoader.loadClasspath(path, locale, null, clazz))
     }
 
-    fun loadBundles(locales: List<Locale>) {
+    fun loadBundles(locales: List<Locale>, path: String = "/translations/bundle_{languageTag}.properties", clazz: Class<Any> = javaClass) {
         locales.forEach {
-            loadBundle(it, "/translations/bundle_${it.toLanguageTag()}.properties")
+            loadBundle(it, path.replace("{languageTag}", it.toLanguageTag()), clazz)
         }
     }
 
-    fun loadBundles(vararg locales: Locale) = loadBundles(locales.toList())
+    fun loadBundles(vararg locales: Locale, path: String = "/translations/bundle_{languageTag}.properties", clazz: Class<Any> = javaClass) = loadBundles(locales.toList(), path, clazz)
 
-    fun format(string: String, vararg args: String): String {
+    fun format(string: String, vararg args: Any): String {
         return try {
             MessageFormat.format(string, *args)
         } catch (e: Exception) {
-            "${string}\n(Failed to format translation)"
+            string
         }
     }
 
@@ -74,7 +59,7 @@ class BundleManager(name: String) {
     }
 
     fun translate(key: String, vararg args: Any?): String {
-        return translate(Locale.getDefault(), key, *args)
+        return translate(localeProvider(), key, *args)
     }
 }
 
@@ -99,7 +84,7 @@ class I18NBundle(
     }
 
     fun translate(key: String, vararg args: Any?): String {
-        return I18N.format(get(key) ?: "???${key}???", *args.map { it.toString() }.toTypedArray())
+        return MessageFormat.format(get(key) ?: "???${key}???", *args.map { it.toString() }.toTypedArray())
     }
 
 }
@@ -123,10 +108,10 @@ object I18NBundleLoader {
         )
     }
 
-    fun loadClasspath(path: String, locale: Locale, parent: I18NBundle? = null): I18NBundle {
-        val reader = javaClass.getResourceAsStream(path)?.reader()
+    fun loadClasspath(path: String, locale: Locale, parent: I18NBundle? = null, clazz: Class<Any> = javaClass): I18NBundle {
+        val reader = clazz.getResourceAsStream(path)?.reader()
         if(reader == null) {
-            logger.error("Bundle file $path not found in classpath!")
+            logger.errorln("Bundle file $path not found in classpath!")
             return I18NBundle.createEmptyBundle()
         }
         return load(reader, locale, parent)
