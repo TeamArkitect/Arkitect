@@ -17,6 +17,10 @@ class BundleManager {
         return bundles.keys.toList()
     }
 
+    fun clear() {
+        bundles.clear()
+    }
+
     fun addBundle(bundle: I18NBundle) {
         bundles[bundle.locale] = bundle
     }
@@ -33,19 +37,19 @@ class BundleManager {
         addBundle(I18NBundleLoader.loadClasspath(path, locale, null, clazz))
     }
 
-    fun loadBundles(locales: List<Locale>, clazz: Class<Any> = javaClass) {
+    fun loadBundles(locales: List<Locale>, path: String = "/translations/bundle_{languageTag}.properties", clazz: Class<Any> = javaClass) {
         locales.forEach {
-            loadBundle(it, "/translations/bundle_${it.toLanguageTag()}.properties", clazz)
+            loadBundle(it, path.replace("{languageTag}", it.toLanguageTag()), clazz)
         }
     }
 
-    fun loadBundles(vararg locales: Locale) = loadBundles(locales.toList())
+    fun loadBundles(vararg locales: Locale, path: String = "/translations/bundle_{languageTag}.properties", clazz: Class<Any> = javaClass) = loadBundles(locales.toList(), path, clazz)
 
     fun format(string: String, vararg args: Any): String {
         return try {
             MessageFormat.format(string, *args)
         } catch (e: Exception) {
-            "${string}\n(Failed to format translation)"
+            string
         }
     }
 

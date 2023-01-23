@@ -21,7 +21,7 @@ object Logging {
     }
 
     fun useStyle(text: String, affixes: Pair<String, String> = "<" to ">"): String {
-        if(!::styles.isInitialized) return text
+        if (!::styles.isInitialized) return text
         var _text = text
         styles.forEach {
             _text = _text.replace("${affixes.first}${it.key}${affixes.second}", it.value, ignoreCase = true)
@@ -47,11 +47,15 @@ object Logging {
             bundleManager.translate(key) + it.substringAfter(suffix)
         }.joinToString("")
 
-        return bundleManager.format(translated, *args)
+        return bundleManager.format(translated, *args.map { useTranslation(bundleManager, it.toString()) }.toTypedArray())
     }
 
     fun format(bundleManager: BundleManager, text: String, vararg args: Any, indent: Int = 0): String {
         return useStyle(useTranslation(bundleManager, text, *args).replace("<indent>", " ".repeat(indent)))
+    }
+
+    fun formatClient(bundleManager: BundleManager, text: String, vararg args: Any): String {
+        return useTranslation(bundleManager, text, *args)
     }
 
     enum class Level(val display: String) {

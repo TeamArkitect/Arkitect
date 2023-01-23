@@ -61,6 +61,7 @@ class Arkitect: Plugin() {
         logger.infoln("<%arkitect.stopping%>")
 
         Modules.dispose()
+        EventManager.dispose()
 
         settings?.save(DataFile("settings.json"))
     }

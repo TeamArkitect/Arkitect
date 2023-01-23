@@ -221,7 +221,7 @@ object Modules: Disposable {
         if(!file.isFile) return
 
         try {
-            if(!noLog) logger.infoln("<%module.unload%>")
+            if(!noLog) logger.infoln("<%module.unload%>", file.name)
             val module = loaded.firstOrNull { it.file.canonicalPath == file.canonicalPath } ?: return
             module.disable()
             loaded.remove(module)
@@ -229,9 +229,9 @@ object Modules: Disposable {
     }
 
     fun reload(file: File, noLog: Boolean = false) {
-        if(!noLog) logger.infoln("<%module.reload%>")
-        unload(file, noLog = noLog)
-        load(file, noLog = noLog)
+        if(!noLog) logger.infoln("<%module.reload%>", file.name)
+        unload(file, noLog = true)
+        load(file, noLog = true)
     }
 
     fun readMetas(): Map<File, ModuleMeta> {
@@ -252,197 +252,3 @@ object Modules: Disposable {
         }
     }
 }
-
-/*
-object Modules {
-
-    private val logger = Logger("Arkitect/Modules")
-    private val moduleClassLoader = ModClassLoader(javaClass.classLoader)
-
-    val modulesDirectory = DataFile("modules", mkdirs = true)
-    val loadedModules = mutableMapOf<String, Pair<ArkitectModule, ModuleMeta>>()
-
-    private var watcherJob: Job? = null
-
-    fun init() {
-        if(Arkitect.settings.watchModules) {
-            watchModules()
-            logger.infoT("module.watching", modulesDirectory)
-        }
-
-        loadDirectory(modulesDirectory)
-    }
-
-    fun watchModules() {
-        watcherJob = CoroutineScope(Dispatchers.IO).launch {
-            val watchService = withContext(Dispatchers.IO) {
-                FileSystems.getDefault().newWatchService()
-            }
-
-            withContext(Dispatchers.IO) {
-                modulesDirectory.toPath().register(
-                    watchService,
-                    StandardWatchEventKinds.ENTRY_CREATE,
-                    StandardWatchEventKinds.ENTRY_DELETE,
-                    StandardWatchEventKinds.ENTRY_MODIFY
-                )
-            }
-
-            while (watcherJob != null) {
-                val key = withContext(Dispatchers.IO) {
-                    watchService.take()
-                }
-
-                val events = key.pollEvents()
-
-                val loaded = mutableListOf<String>()
-                val unloaded = mutableListOf<String>()
-                val reloaded = mutableListOf<String>()
-                events.forEach {
-                    val kind = it.kind()
-                    val path = it.context() as Path
-                    val file = File(modulesDirectory, path.name)
-
-                    when(kind) {
-                        StandardWatchEventKinds.ENTRY_CREATE -> {
-                            if(file.extension == "jar") {
-                                val (instance, meta) = load(file) ?: return@forEach
-                                if(loadedModules.values.map { it.second.name }.contains(meta.name)) return@forEach logger.errorT("module.load_fail.already_loaded")
-                                loadedModules[file.name] = instance to meta
-                                instance.load()
-                                loaded.add(file.name)
-                            }
-                        }
-                        StandardWatchEventKinds.ENTRY_DELETE -> {
-                            if(loadedModules.keys.contains(file.name)) {
-                                unload(file)
-                                unloaded.add(file.name)
-                            }
-                        }
-                        StandardWatchEventKinds.ENTRY_MODIFY -> {
-                            if(loadedModules.keys.contains(file.name)) {
-                                unload(file)
-                                load(file)
-                                reloaded.add(file.name)
-                            }
-                        }
-                    }
-                }
-
-                if(!key.reset()) break
-
-                logger.infoT("module.changed", loaded.size, unloaded.size, reloaded.size)
-            }
-        }
-    }
-
-    private fun checkFile(file: File): Boolean {
-        return file.isFile && file.extension == "jar"
-    }
-
-    /**
-     * Load all mods in the directory.
-     */
-    fun loadDirectory(directory: File) {
-        if(!directory.isDirectory) throw RuntimeException("Provided file is not a directory!")
-
-        var moduleFiles = 0
-        var successfullyLoaded = 0
-        directory.listFiles { file -> checkFile(file) }?.forEach { file ->
-            moduleFiles++
-            val (instance, meta) = load(file) ?: return
-            if(loadedModules.values.map { it.second.name }.contains(meta.name)) return logger.errorT("module.load_fail.already_loaded", meta.name)
-            loadedModules[file.name] = instance to meta
-            successfullyLoaded++
-        }
-
-        loadedModules.values.forEach {
-            val (module, _) = it
-            module.load()
-        }
-
-        if(moduleFiles == 0) {
-            logger.infoT("module.loaded_directory.no_modules_found", directory.path)
-        } else {
-            logger.infoT("module.loaded_directory", directory.path, successfullyLoaded, moduleFiles)
-        }
-    }
-
-    fun load(file: File, dontCheck: Boolean = false): Pair<ArkitectModule, ModuleMeta>? {
-        if(!checkFile(file) && !dontCheck) return null
-
-        lateinit var zipFile: ZipFi
-        fun validateJar(): Boolean {
-            try {
-                zipFile = ZipFi(Fi(file))
-            } catch (_: Exception) {
-                return false
-            }
-            return true
-        }
-
-        fun findMeta(): ModuleMeta? {
-            val metaFile = zipFile.child("module.json")
-            if(!metaFile.exists()) logger.errorT("module.load_fail.no_meta", file.name).run { return null }
-            val text = metaFile.reader().readText()
-            return try {
-                Json.decodeFromString<ModuleMeta>(text)
-            } catch (_: Exception) {
-                logger.errorT("module.load_fail.invalid_meta", file.name)
-                null
-            }
-        }
-
-        fun checkMainClass(meta: ModuleMeta): Fi {
-            val mainClass = meta.mainClass
-            val filePath = "${mainClass.replace(".", "/")}.class"
-            var mainClassFile = zipFile as Fi
-            filePath.split("/").forEach {
-                if (it.isNotEmpty()) mainClassFile = mainClassFile.child(it)
-            }
-            return mainClassFile
-        }
-
-        if (!validateJar()) logger.errorT("module.load_fail.not_a_jar", file.name, file.name).run { return null }
-
-        val meta = findMeta() ?: return null
-        val mainClassFile = checkMainClass(meta)
-
-        if (!mainClassFile.exists()) logger.errorT("module.load_fail.main_class_not_found", file.name).run { return null }
-
-        val loader = Vars.platform.loadJar(file.fi(), moduleClassLoader)
-        moduleClassLoader.addChild(loader)
-
-        val mainClass = Class.forName(meta.mainClass, true, loader)
-
-        if (!ArkitectModule::class.java.isAssignableFrom(mainClass)) logger.errorT("module.load_fail.main_class_not_implementing", file.name)
-            .run { return null }
-
-        return try {
-            val constructor = mainClass.getDeclaredConstructor()
-            val instance = constructor.newInstance() as ArkitectModule
-            (instance to meta)
-        } catch (_: Exception) {
-            logger.errorT("module.load_fail.main_class_constructor_invalid", file.name)
-            null
-        }
-    }
-
-    fun load(fileName: String) = load(File(modulesDirectory, fileName))
-
-    fun unload(file: File) {
-        loadedModules.remove(file.name)?.first?.unload()
-    }
-
-    fun unload(fileName: String) = unload(File(modulesDirectory, fileName))
-
-    fun dispose() {
-        watcherJob = null
-
-        loadedModules.values.forEach {
-            it.first.unload()
-        }
-    }
-
-}
-*/
