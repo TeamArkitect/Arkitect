@@ -111,7 +111,7 @@ object I18NBundleLoader {
     fun loadClasspath(path: String, locale: Locale, parent: I18NBundle? = null, clazz: Class<Any> = javaClass): I18NBundle {
         val reader = clazz.getResourceAsStream(path)?.reader()
         if(reader == null) {
-            logger.errorln("Bundle file $path not found in classpath!")
+            logger.info("Bundle file $path not found in classpath!")
             return I18NBundle.createEmptyBundle()
         }
         return load(reader, locale, parent)

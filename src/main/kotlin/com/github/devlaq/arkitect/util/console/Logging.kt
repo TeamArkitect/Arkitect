@@ -4,12 +4,18 @@ import com.github.devlaq.arkitect.i18n.BundleManager
 import com.github.devlaq.arkitect.util.resources.getResourceAsText
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import java.text.MessageFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 object Logging {
 
     lateinit var styles: Map<String, String>
+
+    var logHandler = { text: String ->
+        println(text)
+    }
 
     fun init() {
         loadStyles()
@@ -38,24 +44,34 @@ object Logging {
         return _text
     }
 
-    fun useTranslation(bundleManager: BundleManager, text: String, vararg args: Any): String {
+    fun useTranslation(bundleManager: BundleManager, text: String, vararg args: Any, locale: Locale = bundleManager.localeProvider()): String {
         val (prefix, suffix) = "<%" to "%>"
 
         val translated = text.split(prefix)[0] + text.split(prefix).drop(1).map {
             val key = it.substringBefore(suffix)
             if(key == it) return@map it
-            bundleManager.translate(key) + it.substringAfter(suffix)
+            bundleManager.translate(locale, key) + it.substringAfter(suffix)
         }.joinToString("")
 
         return bundleManager.format(translated, *args.map { useTranslation(bundleManager, it.toString()) }.toTypedArray())
     }
 
-    fun format(bundleManager: BundleManager, text: String, vararg args: Any, indent: Int = 0): String {
-        return useStyle(useTranslation(bundleManager, text, *args).replace("<indent>", " ".repeat(indent)))
+    fun applyIndent(text: String, indent: Int = 0): String {
+        val lastNewlineRemoved = text.removeSuffix("\n")
+        val indented = lastNewlineRemoved.replace("\n", "\n${" ".repeat(indent)}")
+        return indented + if (text.endsWith("\n")) "\n" else ""
     }
 
-    fun formatClient(bundleManager: BundleManager, text: String, vararg args: Any): String {
-        return useTranslation(bundleManager, text, *args)
+    fun formatString(string: String, vararg args: Any): String {
+        return try {
+            MessageFormat.format(string, *args)
+        } catch (e: Exception) {
+            string
+        }
+    }
+
+    fun format(bundleManager: BundleManager, text: String, vararg args: Any): String {
+        return useStyle(useTranslation(bundleManager, text, *args))
     }
 
     enum class Level(val display: String) {
@@ -71,79 +87,55 @@ object Logging {
 
 class Logger(var tag: String, val bundleManager: BundleManager? = null) {
 
+    private var bufferLevel: Logging.Level = Logging.Level.Info
+    private val buffer = mutableListOf<Pair<String, Array<out Any>>>()
+
     fun generatePrefix(level: Logging.Level): String {
         val dateTimeFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
         val time = "<bold><lightBlack>[${dateTimeFormatter.format(LocalDateTime.now())}]</>"
         return "$time ${level.display} [$tag] "
     }
 
-    fun log(level: Logging.Level, message: String, vararg args: Any) {
-        val prefix = generatePrefix(level)
-        if(bundleManager == null) print(Logging.useStyle("$prefix$message"))
-        else print(Logging.format(bundleManager, "$prefix$message", *args, indent = Logging.removeStyle(prefix).length))
+    fun printBuffer() {
+        val message = buffer.joinToString("\n") {
+            if(bundleManager != null) Logging.format(bundleManager, it.first, *it.second)
+            else Logging.formatString(it.first, *it.second)
+        }
+
+        val prefix = generatePrefix(bufferLevel)
+        val indentedMessage = Logging.applyIndent(message, Logging.removeStyle(prefix).length)
+        val finalMessage = Logging.useStyle("$prefix$indentedMessage")
+
+        Logging.logHandler(finalMessage)
+
+        buffer.clear()
     }
 
-    fun logln(level: Logging.Level, message: String, vararg args: Any) {
-        log(level, "$message\n", *args)
+    fun log(level: Logging.Level, message: String, vararg args: Any, suspendLine: Boolean = false) {
+        bufferLevel = level
+        buffer.add(message to args)
+
+        if(!suspendLine) printBuffer()
     }
 
-    fun print(message: String, vararg args: Any) {
-        if(bundleManager == null) kotlin.io.print(Logging.useStyle(message))
-        else kotlin.io.print(Logging.format(bundleManager, message, *args, indent = generatePrefix(Logging.Level.Info).length))
+    fun debug(message: String, vararg args: Any, suspendLine: Boolean = false) {
+        log(Logging.Level.Debug, message, *args, suspendLine = suspendLine)
     }
 
-    fun println(message: String, vararg args: Any) {
-        print("$message\n", *args)
+    fun info(message: String, vararg args: Any, suspendLine: Boolean = false) {
+        log(Logging.Level.Info, message, *args, suspendLine = suspendLine)
     }
 
-    fun println() = println("")
-
-    fun trace(message: String, vararg args: Any) {
-        log(Logging.Level.Trace, message, *args)
+    fun warn(message: String, vararg args: Any, suspendLine: Boolean = false) {
+        log(Logging.Level.Warn, message, *args, suspendLine = suspendLine)
     }
 
-    fun traceln(message: String, vararg args: Any) {
-        logln(Logging.Level.Trace, message, *args)
+    fun error(message: String, vararg args: Any, suspendLine: Boolean = false) {
+        log(Logging.Level.Error, message, *args, suspendLine = suspendLine)
     }
 
-    fun debug(message: String, vararg args: Any) {
-        log(Logging.Level.Debug, message, *args)
-    }
-
-    fun debugln(message: String, vararg args: Any) {
-        logln(Logging.Level.Debug, message, *args)
-    }
-
-    fun info(message: String, vararg args: Any) {
-        log(Logging.Level.Info, message, *args)
-    }
-
-    fun infoln(message: String, vararg args: Any) {
-        logln(Logging.Level.Info, message, *args)
-    }
-
-    fun warn(message: String, vararg args: Any) {
-        log(Logging.Level.Warn, message, *args)
-    }
-
-    fun warnln(message: String, vararg args: Any) {
-        logln(Logging.Level.Warn, message, *args)
-    }
-
-    fun error(message: String, vararg args: Any) {
-        log(Logging.Level.Error, message, *args)
-    }
-
-    fun errorln(message: String, vararg args: Any) {
-        logln(Logging.Level.Error, message, *args)
-    }
-
-    fun crit(message: String, vararg args: Any) {
-        log(Logging.Level.Critical, message, *args)
-    }
-
-    fun critln(message: String, vararg args: Any) {
-        logln(Logging.Level.Critical, message, *args)
+    fun crit(message: String, vararg args: Any, suspendLine: Boolean = false) {
+        log(Logging.Level.Critical, message, *args, suspendLine = suspendLine)
     }
 
 }

@@ -2,6 +2,7 @@ package com.github.devlaq.arkitect
 
 import arc.ApplicationListener
 import arc.Core
+import arc.util.CommandHandler
 import com.github.devlaq.arkitect.command.registerCommands
 import com.github.devlaq.arkitect.core.module.Modules
 import com.github.devlaq.arkitect.i18n.BundleManager
@@ -33,6 +34,8 @@ class Arkitect: Plugin() {
             }
         })
 
+        Runtime.getRuntime().addShutdownHook(Thread(::dispose))
+
         bundleManager.loadBundles(
             Locale.KOREAN,
             Locale.ENGLISH
@@ -42,28 +45,36 @@ class Arkitect: Plugin() {
             Locale.forLanguageTag(settings?.locale ?: Locale.getDefault().toLanguageTag())
         }
 
+        registerCommands()
+
         Logging.init()
 
-        logger.infoln("<%arkitect.starting%>")
+        logger.info("<%arkitect.starting%>")
 
         val timeToInitialize = measureTime {
             settings = ArkitectSettings.load(DataFile("settings.json"))
 
-            registerCommands()
-
             Modules.init()
         }
 
-        logger.infoln("<%arkitect.started%>", timeToInitialize)
+        logger.info("<%arkitect.started%>", timeToInitialize)
     }
 
     fun dispose() {
-        logger.infoln("<%arkitect.stopping%>")
+        logger.info("<%arkitect.stopping%>")
 
         Modules.dispose()
         EventManager.dispose()
 
         settings?.save(DataFile("settings.json"))
+    }
+
+    override fun registerClientCommands(handler: CommandHandler?) {
+        super.registerClientCommands(handler)
+    }
+
+    override fun registerServerCommands(handler: CommandHandler?) {
+        super.registerServerCommands(handler)
     }
 
 }

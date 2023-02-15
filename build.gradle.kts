@@ -118,7 +118,7 @@ if(System.getenv("JITPACK") != "true") {
                     val processesToKill = jvmProcesses.keys.joinToString(" ") { it.toString() }
                     println("Killed alive test servers [${jvmProcesses.keys.joinToString(",")}]")
                     val process = ProcessBuilder()
-                        .command("kill", "-9", processesToKill)
+                        .command("kill", processesToKill)
                         .start()
                     process.waitFor()
                 }
